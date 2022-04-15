@@ -453,9 +453,16 @@ var _ = Describe("Service with annotation", func() {
 	})
 	It("should support service annotation 'service.beta.kubernetes.io/azure-load-balancer-health-probe-protocol' and port specific configs", func() {
 		By("Creating a service with health probe annotations")
+		const (
+			ProbeProtocol    = "Http"
+			ProbePort        = "15021"
+			ProbeRequestPath = "/testrequestpath"
+		)
+
 		annotation := map[string]string{
-			consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:    "Http",
-			consts.ServiceAnnotationLoadBalancerHealthProbeRequestPath: "/",
+			consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:    ProbeProtocol,
+			consts.ServiceAnnotationLoadBalancerHealthProbePort:        ProbePort,
+			consts.ServiceAnnotationLoadBalancerHealthProbeRequestPath: ProbeRequestPath,
 		}
 
 		// create service with given annotation and wait it to expose
@@ -474,12 +481,16 @@ var _ = Describe("Service with annotation", func() {
 			lb = getAzureLoadBalancerFromPIP(tc, publicIP, tc.GetResourceGroup(), "")
 			return len(*lb.LoadBalancerPropertiesFormat.Probes) == 1, nil
 		})
+
 		Expect(err).NotTo(HaveOccurred())
+
 		// get lb from azure client
 		By("Validating health probe configs")
 		probes := *lb.Probes
 		Expect((len(probes))).To(Equal(1))
 		Expect(probes[0].Protocol).To(Equal(network.ProbeProtocolHTTP))
+		Expect(probes[0].RequestPath).To(Equal(ProbeRequestPath))
+		Expect(probes[0].Port).To(Equal(ProbePort))
 	})
 })
 

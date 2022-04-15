@@ -1971,6 +1971,30 @@ func (az *Cloud) buildHealthProbeRulesForPort(annotations map[string]string, por
 		}
 		properties.RequestPath = path
 	}
+
+	// get the port for the health check
+	var healthcheckPortValidator = func(val *int32) error {
+		const (
+			MinHealthcheckPort = 1
+			MaxHealthcheckPort = 65536
+		)
+
+		if *val < MinHealthcheckPort && *val > MaxHealthcheckPort {
+			return fmt.Errorf("probe port must be between %d and %d, inclusive", MinHealthcheckPort, MaxHealthcheckPort)
+		}
+
+		return nil
+	}
+
+	healthcheckPort, err := consts.Getint32ValueFromK8sSvcAnnotation(annotations, consts.ServiceAnnotationLoadBalancerHealthProbePort, healthcheckPortValidator)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse annotation %s: %w", consts.ServiceAnnotationLoadBalancerHealthProbePort, err)
+	}
+
+	if healthcheckPort == nil {
+		healthcheckPort = &port.NodePort
+	}
+
 	// get number of probes
 	var numOfProbeValidator = func(val *int32) error {
 		//minimum number of unhealthy responses is 2. ref: https://docs.microsoft.com/en-us/rest/api/load-balancer/load-balancers/create-or-update#probe
@@ -1986,6 +2010,7 @@ func (az *Cloud) buildHealthProbeRulesForPort(annotations map[string]string, por
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse annotation %s: %w", consts.BuildHealthProbeAnnotationKeyForPort(port.Port, consts.HealthProbeParamsNumOfProbe), err)
 	}
+
 	if numberOfProbes == nil {
 		if numberOfProbes, err = consts.Getint32ValueFromK8sSvcAnnotation(annotations, consts.ServiceAnnotationLoadBalancerHealthProbeNumOfProbe, numOfProbeValidator); err != nil {
 			return nil, fmt.Errorf("failed to parse annotation %s: %w", consts.ServiceAnnotationLoadBalancerHealthProbeNumOfProbe, err)
@@ -2028,7 +2053,7 @@ func (az *Cloud) buildHealthProbeRulesForPort(annotations map[string]string, por
 	}
 	properties.IntervalInSeconds = probeInterval
 	properties.NumberOfProbes = numberOfProbes
-	properties.Port = &port.NodePort
+	properties.Port = healthcheckPort
 	probe := &network.Probe{
 		Name:                  &lbrule,
 		ProbePropertiesFormat: properties,

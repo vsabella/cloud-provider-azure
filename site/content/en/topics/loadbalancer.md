@@ -32,6 +32,7 @@ Below is a list of annotations supported for Kubernetes services with type `Load
 | `service.beta.kubernetes.io/azure-load-balancer-health-probe-interval` | Health probe interval | Refer to the detailed docs [here](#custom-load-balancer-health-probe) | v1.21 and later  with out-of-tree cloud provider  |
 | `service.beta.kubernetes.io/azure-load-balancer-health-probe-num-of-probe` | The minimum number of unhealthy responses of health probe  |  Refer to the detailed docs [here](#custom-load-balancer-health-probe) |	v1.21 and later  with out-of-tree cloud provider|
 | `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path` | Request path of the health probe | Refer to the detailed docs [here](#custom-load-balancer-health-probe) | v1.20 and later  with out-of-tree cloud provider|
+| `service.beta.kubernetes.io/azure-load-balancer-health-probe-port` | Request port of the health probe, otherwise defaults to the NodePort of the service. | Refer to the detailed docs [here](#custom-load-balancer-health-probe) | v1.21 and later  with out-of-tree cloud provider|
 | `service.beta.kubernetes.io/port_{port}_health-probe_interval` | Health probe interval |  {port} is port number of service.  Refer to the detailed docs [here](#custom-load-balancer-health-probe) | v1.21 and later  with out-of-tree cloud provider|
 | `service.beta.kubernetes.io/port_{port}_health-probe_num-of-probe` | The minimum number of unhealthy responses of health probe  | {port} is port number of service. Refer to the detailed docs [here](#custom-load-balancer-health-probe) |	v1.21 and later with out-of-tree cloud provider|
 | `service.beta.kubernetes.io/port_{port}_health-probe_request-path` | Request path of the health probe | {port} is port number of service.  Refer to the detailed docs [here](#custom-load-balancer-health-probe) | v1.20 and later with out-of-tree cloud provider|
@@ -162,6 +163,9 @@ Currently, the default protocol of the health probe varies among services with d
 
 Since v1.20, two service annotations `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path` are introduced, which determine the new health probe behavior. If the spec.ports.appProtocol is set, both local and cluster TCP services would use the specified health probe protocol. If the `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path` is set, the specified request path would be used instead of `/healthz`. Note that the request path would be ignored when using TCP or the spec.ports.appProtocol is empty. More specifically:
 
+If `service.beta.kubernetes.io/azure-load-balancer-health-probe-port` is set the health probe will use the specified port, otherwise it will default to the NodePort of the service.
+
+
 |loadbalancer sku| `externalTrafficPolicy` | spec.ports.Protocol |spec.ports.AppProtocol| `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path` | protocol | request path |
 |---| ------------------------------------------------------------ | ---------------------------- | ----------------------------------------------------|-------- |------| ----- |
 | standard| local |any| any | any | http | `/healthz` |
@@ -185,13 +189,13 @@ Since v1.21, two service annotations `service.beta.kubernetes.io/azure-load-bala
 
 Because [MixedProtocolLBService](https://kubernetes.io/docs/concepts/services-networking/service/#load-balancers-with-mixed-protocol-types) feature is in alpha stage, Ports in one service may have different probe configurations. Following annotations are introduced to customize probe configuration for one port.
 
-| port specific annotation | global probe annotation | 
-| --| -- | 
+| port specific annotation | global probe annotation |
+| --| -- |
 |service.beta.kubernetes.io/port_{port}_health-probe_request-path|service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path|
 |service.beta.kubernetes.io/port_{port}_health-probe_num-of-probe|service.beta.kubernetes.io/azure-load-balancer-health-probe-num-of-probe|
 |service.beta.kubernetes.io/port_{port}_health-probe_interval    |service.beta.kubernetes.io/azure-load-balancer-health-probe-interval    |
 
-For following manifest, probe rule for port httpsserver is different from the one for httpserver because annoations for port httpsserver are specified. 
+For following manifest, probe rule for port httpsserver is different from the one for httpserver because annoations for port httpsserver are specified.
 
 ```yaml
 apiVersion: v1

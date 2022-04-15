@@ -260,6 +260,10 @@ const (
 	// If not set, the local service would use the HTTP and the cluster service would use the TCP by default.
 	ServiceAnnotationLoadBalancerHealthProbeProtocol = "service.beta.kubernetes.io/azure-load-balancer-health-probe-protocol"
 
+	// ServiceAnnotationLoadBalancerHealthProbePort determines the network port that the load balancer health probe uses.
+	// If not set, the value of the port's NodePort will be used instead.
+	ServiceAnnotationLoadBalancerHealthProbePort = "service.beta.kubernetes.io/azure-load-balancer-health-probe-port"
+
 	// ServiceAnnotationLoadBalancerHealthProbeInterval determines the probe interval of the load balancer health probe.
 	// The minimum probe interval is 5 seconds and the default value is 15. The total duration of all intervals cannot exceed 120 seconds.
 	ServiceAnnotationLoadBalancerHealthProbeInterval = "service.beta.kubernetes.io/azure-load-balancer-health-probe-interval"

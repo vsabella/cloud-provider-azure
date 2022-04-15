@@ -18,13 +18,13 @@ set -e
 
 KUBECONFIG=${KUBECONFIG:-""}
 
-if [ -z "$KUBECONFIG" ]
-echo "KUBECONFIG not set"
-exit 1
+if [ -z "$KUBECONFIG" ]; then
+  echo "KUBECONFIG not set"
+  exit 1
 fi
 
 cd $GOPATH/src/k8s.io/kubernetes
- [ ! -d "$GOPATH/src/k8s.io/kubernetes" ] && cd $GOPATH/src/k8s.io && git clone https://github.com/kubernetes/kubernetes.git	
+ [ ! -d "$GOPATH/src/k8s.io/kubernetes" ] && cd $GOPATH/src/k8s.io && git clone https://github.com/kubernetes/kubernetes.git
 
 make WHAT='test/e2e/e2e.test'
 make WHAT=cmd/kubectl
